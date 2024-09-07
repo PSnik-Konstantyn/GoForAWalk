@@ -1,28 +1,37 @@
 package org.example;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class RoutePlanner {
 
-    public String planRoute(List<Place> places, double startLat, double startLon, double minDistance, double maxDistance, List<String> preferredCategories) {
+    private static final Random random = new Random();
+
+    public String planRoute(List<Place> places, double startLat, double startLon, double minDistance, double maxDistance, Map<String, Integer> preferredCategories) {
         List<Place> route = new ArrayList<>();
         double currentLat = startLat;
         double currentLon = startLon;
         double totalDistance = 0;
         StringBuilder routeDetails = new StringBuilder();
 
-        while (!places.isEmpty() && totalDistance < maxDistance) {
-            Place nearestPlace = findNearestPlace(places, currentLat, currentLon, preferredCategories);
-            double distanceToPlace = calculateDistance(currentLat, currentLon, nearestPlace.getLat(), nearestPlace.getLon());
+        places = filterPlacesByCategory(places, preferredCategories);
 
-            if (totalDistance + distanceToPlace <= maxDistance) {
-                route.add(nearestPlace);
+        while (!places.isEmpty() && totalDistance < maxDistance) {
+            Place selectedPlace = findRandomPlace(places, currentLat, currentLon);
+            double distanceToPlace = calculateDistance(currentLat, currentLon, selectedPlace.getLat(), selectedPlace.getLon());
+
+            if (totalDistance + distanceToPlace <= maxDistance && totalDistance + distanceToPlace >= minDistance) {
+                route.add(selectedPlace);
                 totalDistance += distanceToPlace;
-                routeDetails.append(nearestPlace.toString()).append(" - ").append(distanceToPlace).append(" km - ");
-                currentLat = nearestPlace.getLat();
-                currentLon = nearestPlace.getLon();
-                places.remove(nearestPlace);
+                routeDetails.append(selectedPlace.toString()).append(" - ").append(distanceToPlace).append(" км - ");
+                currentLat = selectedPlace.getLat();
+                currentLon = selectedPlace.getLon();
+                places.remove(selectedPlace);
+            } else if (totalDistance + distanceToPlace < minDistance) {
+                totalDistance += distanceToPlace;
             } else {
                 break;
             }
@@ -30,29 +39,28 @@ public class RoutePlanner {
 
         double returnDistance = calculateDistance(currentLat, currentLon, startLat, startLon);
         totalDistance += returnDistance;
-        routeDetails.append("Return - ").append(returnDistance).append(" km\n");
-        routeDetails.append("Total distance: ").append(totalDistance).append(" km");
+        routeDetails.append("Повернення - ").append(returnDistance).append(" км\n");
+        routeDetails.append("Загальна довжина маршруту: ").append(totalDistance).append(" км");
 
         return routeDetails.toString();
     }
 
-    private Place findNearestPlace(List<Place> places, double lat, double lon, List<String> preferredCategories) {
-        Place nearest = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Place place : places) {
-            double distance = calculateDistance(lat, lon, place.getLat(), place.getLon());
-
-            boolean isPreferred = preferredCategories.contains(place.getCategory());
-            double distanceAdjustment = isPreferred ? 0.9 : 1.0;
-
-            if (distance * distanceAdjustment < minDistance) {
-                minDistance = distance * distanceAdjustment;
-                nearest = place;
-            }
+    private List<Place> filterPlacesByCategory(List<Place> places, Map<String, Integer> preferredCategories) {
+        List<Place> filteredPlaces = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : preferredCategories.entrySet()) {
+            String category = entry.getKey();
+            int limit = entry.getValue();
+            long count = places.stream().filter(place -> place.getCategory().equals(category)).count();
+            places.stream().filter(place -> place.getCategory().equals(category))
+                    .limit(Math.min(limit, count)).forEach(filteredPlaces::add);
         }
+        Collections.shuffle(filteredPlaces);
+        return filteredPlaces;
+    }
 
-        return nearest;
+    private Place findRandomPlace(List<Place> places, double lat, double lon) {
+        int index = random.nextInt(places.size());
+        return places.get(index);
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {

@@ -31,6 +31,6 @@ public class Place {
 
     @Override
     public String toString() {
-        return name + " (" + lat + ", " + lon + ") - Category: " + category;
+        return name + " (" + lat + ", " + lon + ") - Категорія: " + category;
     }
 }
