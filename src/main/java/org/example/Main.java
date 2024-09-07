@@ -8,7 +8,7 @@ public class Main {
         double startLat = 46.9707233223874;
         double startLon = 31.998582187722192;
 
-        String category = "museum";
+        String category = "artwork";
         double minDistance = 3;
         double maxDistance = 5;
 
