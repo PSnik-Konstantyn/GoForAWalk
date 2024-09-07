@@ -5,7 +5,7 @@ import java.util.List;
 
 public class RoutePlanner {
 
-    public String planRoute(List<Place> places, double startLat, double startLon, double minDistance, double maxDistance) {
+    public String planRoute(List<Place> places, double startLat, double startLon, double minDistance, double maxDistance, List<String> preferredCategories) {
         List<Place> route = new ArrayList<>();
         double currentLat = startLat;
         double currentLon = startLon;
@@ -13,7 +13,7 @@ public class RoutePlanner {
         StringBuilder routeDetails = new StringBuilder();
 
         while (!places.isEmpty() && totalDistance < maxDistance) {
-            Place nearestPlace = findNearestPlace(places, currentLat, currentLon);
+            Place nearestPlace = findNearestPlace(places, currentLat, currentLon, preferredCategories);
             double distanceToPlace = calculateDistance(currentLat, currentLon, nearestPlace.getLat(), nearestPlace.getLon());
 
             if (totalDistance + distanceToPlace <= maxDistance) {
@@ -28,7 +28,6 @@ public class RoutePlanner {
             }
         }
 
-
         double returnDistance = calculateDistance(currentLat, currentLon, startLat, startLon);
         totalDistance += returnDistance;
         routeDetails.append("Return - ").append(returnDistance).append(" km\n");
@@ -37,14 +36,18 @@ public class RoutePlanner {
         return routeDetails.toString();
     }
 
-    private Place findNearestPlace(List<Place> places, double lat, double lon) {
+    private Place findNearestPlace(List<Place> places, double lat, double lon, List<String> preferredCategories) {
         Place nearest = null;
         double minDistance = Double.MAX_VALUE;
 
         for (Place place : places) {
             double distance = calculateDistance(lat, lon, place.getLat(), place.getLon());
-            if (distance < minDistance) {
-                minDistance = distance;
+
+            boolean isPreferred = preferredCategories.contains(place.getCategory());
+            double distanceAdjustment = isPreferred ? 0.9 : 1.0;
+
+            if (distance * distanceAdjustment < minDistance) {
+                minDistance = distance * distanceAdjustment;
                 nearest = place;
             }
         }
