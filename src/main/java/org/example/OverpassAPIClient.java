@@ -22,11 +22,10 @@ public class OverpassAPIClient {
 
         for (Map.Entry<String, List<String>> entry : categories.entrySet()) {
             String type = entry.getKey();
-            List<String> subcategories = entry.getValue();
+            List<String> categoryList = entry.getValue();
 
-            for (String category : subcategories) {
-                // Формуємо запит для кожної підкатегорії
-                String query = String.format("[out:json];node[\"%s\"=\"%s\"](around:5000,%f,%f);out;", type, category, lat, lon);
+            for (String category : categoryList) {
+                String query = String.format("[out:json];node[\"%s\"=\"%s\"](around:1000,%f,%f);out;", type, category, lat, lon);
                 String url = OVERPASS_API_URL + "?data=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
 
                 try (CloseableHttpClient client = HttpClients.createDefault()) {
@@ -35,13 +34,14 @@ public class OverpassAPIClient {
                     JSONObject jsonObject = new JSONObject(response);
                     JSONArray elements = jsonObject.getJSONArray("elements");
 
-                    // Обробляємо елементи, які повертає Overpass API
                     for (int i = 0; i < elements.length(); i++) {
                         JSONObject element = elements.getJSONObject(i);
                         double placeLat = element.getDouble("lat");
                         double placeLon = element.getDouble("lon");
                         String name = element.optJSONObject("tags") != null ? element.getJSONObject("tags").optString("name", "Невідомо") : "Невідомо";
-                        places.add(new Place(name, placeLat, placeLon, category));
+                        Place place = new Place(name, placeLat, placeLon, category);
+                        places.add(place);
+
                     }
                 }
             }

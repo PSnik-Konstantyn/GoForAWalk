@@ -17,21 +17,33 @@ public class RoutePlanner {
         double totalDistance = 0;
         StringBuilder routeDetails = new StringBuilder();
 
+        for (Place place : places) {
+            System.out.println(place.toString());
+        }
+
         places = filterPlacesByCategory(places, preferredCategories);
 
-        while (!places.isEmpty() && totalDistance < maxDistance) {
-            Place selectedPlace = findRandomPlace(places, currentLat, currentLon);
+        int numPlaces = random.nextInt(5) + 3;
+        double distancePerPlace = maxDistance / numPlaces;
+
+        for (int i = 0; i < numPlaces && !places.isEmpty() && totalDistance < maxDistance; i++) {
+            double remainingDistance = maxDistance - totalDistance;
+            double searchRadius = remainingDistance / (numPlaces - i);
+
+            Place selectedPlace = findPlaceWithinRadius(places, currentLat, currentLon, searchRadius);
+            if (selectedPlace == null) {
+                selectedPlace = findRandomPlace(places, currentLat, currentLon);
+            }
+
             double distanceToPlace = calculateDistance(currentLat, currentLon, selectedPlace.getLat(), selectedPlace.getLon());
 
-            if (totalDistance + distanceToPlace <= maxDistance && totalDistance + distanceToPlace >= minDistance) {
+            if (totalDistance + distanceToPlace <= maxDistance) {
                 route.add(selectedPlace);
                 totalDistance += distanceToPlace;
-                routeDetails.append(selectedPlace.toString()).append(" - ").append(distanceToPlace).append(" км - ");
+                routeDetails.append(selectedPlace.toString()).append(" - ").append(String.format("%.2f", distanceToPlace)).append(" км - ");
                 currentLat = selectedPlace.getLat();
                 currentLon = selectedPlace.getLon();
                 places.remove(selectedPlace);
-            } else if (totalDistance + distanceToPlace < minDistance) {
-                totalDistance += distanceToPlace;
             } else {
                 break;
             }
@@ -39,8 +51,8 @@ public class RoutePlanner {
 
         double returnDistance = calculateDistance(currentLat, currentLon, startLat, startLon);
         totalDistance += returnDistance;
-        routeDetails.append("Повернення - ").append(returnDistance).append(" км\n");
-        routeDetails.append("Загальна довжина маршруту: ").append(totalDistance).append(" км");
+        routeDetails.append("Повернення - ").append(String.format("%.2f", returnDistance)).append(" км\n");
+        routeDetails.append("Загальна довжина маршруту: ").append(String.format("%.2f", totalDistance)).append(" км");
 
         return routeDetails.toString();
     }
@@ -56,6 +68,16 @@ public class RoutePlanner {
         }
         Collections.shuffle(filteredPlaces);
         return filteredPlaces;
+    }
+
+    private Place findPlaceWithinRadius(List<Place> places, double lat, double lon, double radius) {
+        for (Place place : places) {
+            double distance = calculateDistance(lat, lon, place.getLat(), place.getLon());
+            if (distance <= radius) {
+                return place;
+            }
+        }
+        return null;
     }
 
     private Place findRandomPlace(List<Place> places, double lat, double lon) {

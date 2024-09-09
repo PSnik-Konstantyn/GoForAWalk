@@ -11,18 +11,20 @@ public class Main {
         double startLat = 46.9707233223874;
         double startLon = 31.998582187722192;
 
-
         Map<String, List<String>> categories = new HashMap<>();
-        categories.put("tourism", Arrays.asList("museum", "artwork"));
+        categories.put("tourism", Arrays.asList("museum", "artwork", "historical"));
         categories.put("leisure", Arrays.asList("park"));
-        categories.put("amenity", Arrays.asList("cafe"));
+        categories.put("amenity", Arrays.asList("cafe", "restaurant"));
+        categories.put("shop", Arrays.asList("supermarket"));
 
         Map<String, Integer> preferredCategories = new HashMap<>();
-//        preferredCategories.put("park", 1);
-       preferredCategories.put("cafe", 1);
+        preferredCategories.put("artwork", 5);
+        preferredCategories.put("cafe", 1);
+        preferredCategories.put("restaurant", 1);
+        preferredCategories.put("historical", 1);
 
-        double minDistance = 3;
-        double maxDistance = 5;
+        double minDistance = 13;
+        double maxDistance = 15;
 
         OverpassAPIClient apiClient = new OverpassAPIClient();
         try {
@@ -30,7 +32,6 @@ public class Main {
             List<Place> places = apiClient.getPlaces(startLat, startLon, categories);
 
             RoutePlanner planner = new RoutePlanner();
-
             String routeDetails = planner.planRoute(places, startLat, startLon, minDistance, maxDistance, preferredCategories);
 
             System.out.println("Запланований маршрут:");
