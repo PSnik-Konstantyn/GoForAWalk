@@ -13,7 +13,7 @@ public class Main {
 
         Map<String, List<String>> categories = new HashMap<>();
         categories.put("tourism", Arrays.asList("museum", "artwork", "historical"));
-        categories.put("leisure", Arrays.asList("park"));
+        categories.put("leisure", Arrays.asList("park", "square"));
         categories.put("amenity", Arrays.asList("cafe", "restaurant"));
         categories.put("shop", Arrays.asList("supermarket"));
 
